@@ -1,0 +1,13 @@
+-- DROP VIEW IF EXISTS auth.vw_user;
+--
+-- CREATE VIEW auth.vw_user
+--     (user_id, user_name, user_email, user_active, user_archived, user_party_id, user_party_name) AS
+-- SELECT u.id          AS user_id,
+--        u.name        AS user_name,
+--        u.email       AS user_email,
+--        u.active      AS user_active,
+--        u.archived    AS user_archived,
+--        dp.party_id   AS user_party_id,
+--        dp.party_name AS user_party_name
+-- FROM auth.user u
+--        JOIN auth.ledger_party dp ON u.id = dp.user_id;
