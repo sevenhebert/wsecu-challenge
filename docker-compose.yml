@@ -12,18 +12,18 @@ services:
       POSTGRES_PASSWORD: 'kermit'
       POSTGRES_DB: 'vend'
 
-#  backend:
-#    container_name: backend
-#    build: ./backend
-#    ports:
-#      - '8080:8080'
-#    environment:
-#      API_PORT: '8080'
-#      SQL_HOST: 'vend'
-#      SQL_PORT: '5432'
-#
-#  frontend:
-#    container_name: frontend
-#    build: ./frontend
-#    ports:
-#      - '3000:3000'
+  backend:
+    container_name: backend
+    build: ./backend
+    ports:
+      - '8080:8080'
+    environment:
+      API_PORT: '8080'
+      SQL_HOST: 'vend'
+      SQL_PORT: '5432'
+
+  frontend:
+    container_name: frontend
+    build: ./frontend
+    ports:
+      - '3000:3000'
