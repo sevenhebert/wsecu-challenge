@@ -21,3 +21,21 @@ project/metals.sbt
 
 # mac
 .DS_Store
+
+# Default ignored files
+/shelf/
+/workspace.xml
+.idea/
+
+# Editor-based HTTP Client requests
+/httpRequests/
+
+# Frontend
+#frontend/.pnp
+#frontend/.pnp.js
+frontend/coverage
+frontend/build
+frontend/.DS_Store
+#frontend/.env.production.local
+frontend/node_modules
+*.log*

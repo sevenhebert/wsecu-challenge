@@ -7,26 +7,23 @@ import com.comcast.ip4s.{Host, Port}
 import com.typesafe.scalalogging.StrictLogging
 import io.prometheus.client.CollectorRegistry
 import org.http4s.ember.server.EmberServerBuilder
+import org.http4s.headers.Origin
 import org.http4s.metrics.prometheus.Prometheus
-import org.http4s.server.middleware.{Logger, Metrics}
+import org.http4s.server.middleware.{CORS, Logger, Metrics}
 import org.http4s.server.{Router, Server}
-import org.http4s.{HttpApp, HttpRoutes, Request, Response}
+import org.http4s.{HttpApp, HttpRoutes, Request, Response, Uri}
 
 /** Interprets the endpoint descriptions (defined using tapir) as http4s routes, adding CORS, metrics, api docs and correlation id support.
  *
  * The following endpoints are exposed:
- *   - `/api/v1` - the main API
- *   - `/api/v1/docs` - swagger UI for the main API
+ *   - `/api/vend` - the main API
  *   - `/admin` - admin API
- *   - `/` - serving frontend resources
  */
 class HttpApi(endpoints: HttpRoutes[IO], adminEndpoints: HttpRoutes[IO], collectorRegistry: CollectorRegistry, config: HttpConfig)
   extends StrictLogging {
   private val apiContextPath = "/api"
   private val adminContextPath = "/admin"
   private val respondWithNotFound: HttpRoutes[IO] = Kleisli(_ => OptionT.pure(Response.notFound))
-
-  //  private lazy val corsConfig: CORSConfig = CORSConfig.default
 
   lazy val resource: Resource[IO, Server] = {
     val prometheusHttp4sMetrics = Prometheus.metricsOps[IO](collectorRegistry)
@@ -38,12 +35,20 @@ class HttpApi(endpoints: HttpRoutes[IO], adminEndpoints: HttpRoutes[IO], collect
           adminContextPath -> adminEndpoints
         ).orNotFound
 
-        val finalHttpApp = Logger.httpApp(true, true)(app)
+        val finalHttpApp = Logger.httpApp(logHeaders = true, logBody = true)(app)
 
-        EmberServerBuilder.default[IO]
+        // TODO enable for dev only
+        val corsHttpApp = CORS.policy
+          .withAllowOriginHost(Set(
+            Origin.Host(Uri.Scheme.http, Uri.RegName("localhost"), Some(3000)),
+          ))
+          .withAllowOriginAll(finalHttpApp)
+
+        EmberServerBuilder
+          .default[IO]
           .withHost(Host.fromString(config.host).get)
           .withPort(Port.fromInt(config.port).get)
-          .withHttpApp(finalHttpApp)
+          .withHttpApp(corsHttpApp)
           .build
       }
   }
