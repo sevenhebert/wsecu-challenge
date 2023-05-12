@@ -1,10 +1,12 @@
 import {createContext} from 'react';
-import {InventoryType} from "../models/Product";
+import {InventoryType, ProductType} from "../models/Product";
 import {SelectChangeEvent} from "@mui/material";
 
+
 interface VendingContextType {
-    inventory: InventoryType[];
-    order: Map<number, number>;
+    inventory: InventoryType;
+    order: Map<number, ProductType>;
+    orderTotal: number;
     updateOrder: (id: number, e: SelectChangeEvent<number>) => void;
     purchaseOrder: () => Promise<number | void>;
     isLoading: boolean;
@@ -13,13 +15,16 @@ interface VendingContextType {
 }
 
 const defaultValues: VendingContextType = {
-    inventory: [],
-    order: new Map<number, number>(),
-    updateOrder: () => {},
+    inventory: {},
+    order: new Map(),
+    orderTotal: 0,
+    updateOrder: () => {
+    },
     purchaseOrder: () => new Promise(resolve => resolve(NaN)),
     isLoading: false,
     requestError: undefined,
-    setRequestError: () => {},
+    setRequestError: () => {
+    },
 };
 
 const VendingContext = createContext<VendingContextType>(defaultValues);

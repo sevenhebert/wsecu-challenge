@@ -1,11 +1,11 @@
 interface ProductOrderType {
-  productId: number;
-  quantity: number;
+    productId: number;
+    quantity: number;
 }
 
 interface PurchaseRequestType {
-  products: ProductOrderType[];
-  amountPaid: number;
+    products: ProductOrderType[];
+    amountPaid: number;
 }
 
 export {ProductOrderType, PurchaseRequestType};

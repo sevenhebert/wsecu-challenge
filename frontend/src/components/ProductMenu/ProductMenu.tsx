@@ -1,24 +1,24 @@
 import {InputLabel, MenuItem, Select, SelectChangeEvent} from "@mui/material";
 import React from "react";
-import {InventoryType} from "../../models/Product";
-import {StyledMenu} from "./StyledMenu";
+import {ProductType} from "../../models/Product";
+import {StyledDiv, StyledMenu} from "./StyledMenu";
 
 interface ProductMenuProps {
-    products: InventoryType[];
+    products: ProductType[];
     handleChange: (id: number, e: SelectChangeEvent<number>) => void;
-    order: Map<number, number>;
+    order: Map<number, ProductType>;
 }
 
 const ProductMenu = ({products, handleChange, order}: ProductMenuProps) => (
-    <>
+    <StyledDiv>
         {products.map(({id, name, quantity}, idx) => (
             <StyledMenu key={idx}>
                 <InputLabel>{name}</InputLabel>
-                <Select value={(order.get(id) || 0)} onChange={e => handleChange(id, e)}>
-                    {Array.from({length: quantity}, (_, i) => <MenuItem key={i} value={i}>{i}</MenuItem>)}
+                <Select defaultValue={0} value={(order.get(id)?.quantity)} onChange={e => handleChange(id, e)}>
+                    {Array.from({length: quantity + 1}, (_, i) => <MenuItem key={i} value={i}>{i}</MenuItem>)}
                 </Select>
             </StyledMenu>
         ))}
-    </>
+    </StyledDiv>
 )
 export default ProductMenu;

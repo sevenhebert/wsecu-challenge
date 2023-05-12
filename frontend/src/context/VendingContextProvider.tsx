@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import VendingContext, {defaultValues} from './VendingContext';
 import VendApi from "../api/VendApi";
-import {InventoryType} from "../models/Product";
+import {InventoryType, ProductType} from "../models/Product";
 import {PurchaseRequestType} from "../models/Purchase";
 import {SelectChangeEvent} from "@mui/material";
 
@@ -12,103 +12,113 @@ interface Props {
 }
 
 const VendingContextProvider = ({children}: Props) => {
-    const [inventory, setInventory] = useState<InventoryType[]>(defaultValues.inventory);
-    const [order, setOrder] = useState<Map<number, number>>(defaultValues.order);
-    const [isLoading, setIsLoading] = useState(defaultValues.isLoading);
-    const [requestError, setRequestError] = useState<string | undefined>(defaultValues.requestError);
+        const [inventory, setInventory] = useState<InventoryType>(defaultValues.inventory);
+        const [order, setOrder] = useState<Map<number, ProductType>>(defaultValues.order);
+        const [orderTotal, setOrderTotal] = useState<number>(defaultValues.orderTotal);
+        const [isLoading, setIsLoading] = useState(defaultValues.isLoading);
+        const [requestError, setRequestError] = useState<string | undefined>(defaultValues.requestError);
 
-    /*
-    * Calls the VendApi to get the inventory
-    * Sets the inventory state
-    * */
-    const getInventory = async () => {
-        try {
-            setIsLoading(true);
-            const inventoryResponse = await api.requestInventory();
-            setInventory(inventoryResponse);
-        } catch (err) {
-            console.error(err);
-            setInventory([]);
-            setRequestError('Could not fetch inventory');
-        } finally {
-            setIsLoading(false);
+
+        /*
+        * Converts the ProductType to InventoryType
+        * */
+        const productsToInventory = (products: ProductType[]) =>
+            products.reduce((inv, prod) => ({...inv, [prod.id]: prod}), {});
+
+        /*
+        * Calls the VendApi to get the inventory
+        * Sets the inventory state
+        * */
+        const getInventory = async () => {
+            try {
+                setIsLoading(true);
+                const inventoryResponse = await api.requestInventory();
+                const inventoryUpdate = productsToInventory(inventoryResponse)
+                setInventory(inventoryUpdate);
+            } catch (err) {
+                console.error(err);
+                setInventory([]);
+                setRequestError('Could not fetch inventory');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        /*
+        * Initial call to get the inventory
+        * */
+        useEffect(() => {
+            getInventory();
+        }, []);
+
+        /*
+        * Handles updating the order state
+        * */
+        const updateOrder = (id: number, e: SelectChangeEvent<number>) => {
+            e.preventDefault();
+            const orderUpdate = new Map(order);
+            orderUpdate.set(id, {...inventory[id], quantity: Number(e.target.value)});
+            setOrder(orderUpdate);
+            setOrderTotal(getOrderTotal(orderUpdate));
         }
-    };
 
-    /*
-    * Initial call to get the inventory
-    * */
-    useEffect(() => {
-        getInventory();
-    }, []);
+        /*
+        * Creates a map from inventory to loop-up price by id
+        * */
+        const getOrderTotal = (order: Map<number, ProductType>) => Number(Array.from(order.values())
+            .reduce((acc, cur) => acc + (cur.quantity * cur.price), 0.00).toFixed(2))
 
-    /*
-    * Handles updating the order state
-    * */
-    const updateOrder = (id: number, e: SelectChangeEvent<number>) => {
-        e.preventDefault();
-        const orderUpdate = new Map(order);
-        orderUpdate.set(id, Number(e.target.value));
-        setOrder(orderUpdate);
+        /*
+        * Converts order state to a purchase request
+        * */
+        const orderToPurchase = (order: Map<number, ProductType>) => Array.from(order.values())
+            .reduce((acc, {id, quantity}) => {
+                acc.products.push({productId: id, quantity})
+                return acc
+            }, {products: [], amountPaid: orderTotal} as PurchaseRequestType);
+
+        /*
+        * Calls the VendApi to purchase the order
+        * Updates the inventory state
+        * Resets the order state
+        * */
+        const purchaseOrder = async () => {
+            try {
+                setIsLoading(true);
+                const data = orderToPurchase(order);
+                await api.requestPurchase(data);
+
+                const inventoryResponse = await api.requestInventory();
+                const inventoryUpdate = productsToInventory(inventoryResponse)
+                setInventory(inventoryUpdate);
+
+                setOrder(defaultValues.order);
+                setOrderTotal(defaultValues.orderTotal);
+            } catch (err) {
+                console.error(err);
+                setRequestError('Error purchasing order');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        return (
+            <VendingContext.Provider
+                value={{
+                    inventory,
+                    order,
+                    orderTotal,
+                    updateOrder,
+                    purchaseOrder,
+                    isLoading,
+                    requestError,
+                    setRequestError,
+                }}
+            >
+                {children}
+            </VendingContext.Provider>
+        );
     }
-
-    /*
-    * Creates a map from inventory to loop-up price by id
-    * */
-    const priceMap = (i: InventoryType[]) => i.reduce((acc, cur) => acc.set(cur.id, cur.price), new Map<number, number>())
-
-    /*
-    * Converts order state to a purchase request
-    * */
-    const orderToPurchase = (order: Map<number, number>) => {
-        const prices = priceMap(inventory)
-        return Array.from(order.entries())
-            .reduce((acc, [productId, quantity]) => {
-                acc.products.push({productId, quantity});
-                acc.amountPaid += (prices.get(productId) || 0) * quantity;
-                return acc;
-            }, {products: [], amountPaid: 0.00} as PurchaseRequestType);
-    }
-
-    /*
-    * Calls the VendApi to purchase the order
-    * Updates the inventory state
-    * Resets the order state
-    * */
-    const purchaseOrder = async () => {
-        try {
-            setIsLoading(true);
-            const data = orderToPurchase(order);
-            console.log("data", data)
-            await api.requestPurchase(data);
-
-            const remainingInventory = await api.requestInventory();
-            setInventory(remainingInventory);
-
-            setOrder(defaultValues.order);
-        } catch (err) {
-            console.error(err);
-            setRequestError('Error purchasing order');
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    return (
-        <VendingContext.Provider
-            value={{
-                inventory,
-                order,
-                updateOrder,
-                purchaseOrder,
-                isLoading,
-                requestError,
-                setRequestError,
-            }}
-        >
-            {children}
-        </VendingContext.Provider>
-    );
-};
+;
 
 export default VendingContextProvider;

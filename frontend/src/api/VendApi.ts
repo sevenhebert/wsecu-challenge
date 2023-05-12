@@ -1,16 +1,16 @@
 import axios, {AxiosResponse} from 'axios';
-import {InventoryType} from "../models/Product";
+import {InventoryType, ProductType} from "../models/Product";
 import {PurchaseRequestType} from "../models/Purchase";
 
 class VendApi {
-    requestInventory = async (): Promise<InventoryType[]> =>
+    requestInventory = async (): Promise<ProductType[]> =>
         axios({
             method: 'GET',
             url: 'http://localhost:8080/api/vend/inventory',
             withCredentials: false,
             params: {},
         })
-            .then(({data}: AxiosResponse<InventoryType[]>) => data)
+            .then(({data}: AxiosResponse<ProductType[]>) => data)
             .catch((err) => Promise.reject(err));
 
 

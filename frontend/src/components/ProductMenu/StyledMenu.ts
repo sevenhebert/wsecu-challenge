@@ -2,8 +2,14 @@ import styled from 'styled-components';
 import {FormControl} from "@mui/material";
 
 const StyledMenu = styled(FormControl)`
-  width: 20%;
   padding: 4px;
 `;
 
-export {StyledMenu}
+const StyledDiv = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 20%;
+  margin-top: 18px;
+`;
+
+export {StyledMenu, StyledDiv}

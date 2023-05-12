@@ -1,14 +1,15 @@
 import * as React from 'react';
 import Typography from '@mui/material/Typography';
-import {InventoryType} from "../../models/Product";
+import {InventoryType, ProductType} from "../../models/Product";
 
 import LocalDrinkIcon from '@mui/icons-material/LocalDrink';
 import LunchDiningIcon from '@mui/icons-material/LunchDining';
 import CakeIcon from '@mui/icons-material/Cake';
 import {StyledContainer, StyledMenuItem} from './StyledInventory';
+import {Divider} from "@mui/material";
 
 interface InventoryProps {
-    products: InventoryType[];
+    products: ProductType[];
 }
 
 const Display = ({productName}: { productName: string }) => {
@@ -24,6 +25,8 @@ const Inventory = ({products}: InventoryProps) => (
                 <Typography><Display productName={product.name}/></Typography>
                 <Typography>{product.name}</Typography>
                 <Typography>{product.quantity} Remaining</Typography>
+                <Divider/>
+                <Typography>${product.price}</Typography>
             </StyledMenuItem>
         ))}
     </StyledContainer>

@@ -1,8 +1,12 @@
-interface InventoryType {
-    "id": number,
-    "name": string,
-    "price": number
-    "quantity": number
+interface ProductType {
+    id: number,
+    name: string,
+    price: number
+    quantity: number
 }
 
-export {InventoryType};
+interface InventoryType {
+    [id: number]: ProductType
+}
+
+export {ProductType, InventoryType};
